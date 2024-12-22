@@ -1,0 +1,44 @@
+module top_module(
+    input clk,
+    input areset,    // Freshly brainwashed Lemmings walk left.
+    input bump_left,
+    input bump_right,
+    input ground,
+    input dig,
+    output walk_left,
+    output walk_right,
+    output aaah,
+    output digging ); 
+    
+    localparam left      = 3'b000,
+               dig_left  = 3'b001,
+               left_gnd  = 3'b011,
+               right     = 3'b100,
+               dig_right = 3'b101,
+               right_gnd = 3'b111;
+    
+    reg [2:0] state,next_state;
+     
+    always@(posedge clk, posedge areset) begin
+        if(areset) state <= left;
+        else       state <= next_state;  
+    end
+    
+    always@(*) begin
+        next_state=state;
+        case(state)
+            left  : next_state = ground ? dig ? dig_left  : bump_left  ? right : left  : left_gnd;
+            right : next_state = ground ? dig ? dig_right : bump_right ? left  : right : right_gnd;
+            dig_left : next_state= !ground ? left_gnd : dig_left;
+            dig_right : next_state= !ground ? right_gnd : dig_right;
+            left_gnd : next_state = ground ? left : left_gnd;
+            right_gnd : next_state = ground ? right : right_gnd;
+            default : next_state = left;
+        endcase
+    end
+    
+    assign   aaah = (state == left_gnd || state == right_gnd);
+    assign   walk_left= state==left;
+     assign  walk_right= state==right;
+    assign   digging = (state == dig_left || state == dig_right);
+endmodule
