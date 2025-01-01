@@ -1,0 +1,25 @@
+module top_module (
+    input clk,
+    input reset,   // Synchronous active-high reset
+    output [3:1] ena,
+    output [15:0] q);
+    
+    assign ena[1]=(q[3:0]==4'd9);
+    assign ena[2]=(q[3:0]==4'd9 & q[7:4]==4'd9);
+    assign ena[3]=(q[3:0]==4'd9 & q[7:4]==4'd9 & q[11:8]==4'd9);
+    
+    decade_counter a1(clk,reset,1'b1,q[3:0]);
+    decade_counter a2(clk,reset,ena[1],q[7:4]);
+    decade_counter a3(clk,reset,ena[2],q[11:8]);
+    decade_counter a4(clk,reset,ena[3],q[15:12]);
+
+endmodule
+
+module decade_counter(input clk,reset,ena,
+                      output reg [3:0] q);
+    
+    always@(posedge clk) begin
+        if(reset) q<=4'd0;
+        else q<=ena?(q<4'd9)? q+1:4'd0 :q;
+    end
+endmodule
