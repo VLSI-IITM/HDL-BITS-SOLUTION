@@ -1,0 +1,113 @@
+
+module top_module(
+    input clk,
+    input reset,
+    input ena,
+    output  reg pm,
+    output [7:0] hh,
+    output [7:0] mm,
+    output [7:0] ss); 
+    
+
+    
+  
+  
+    
+    wire [5:0] en;
+    assign en[0]=ena;
+    assign en[1]=(ss[3:0]==4'd9 )&ena;
+    
+    assign en[2]=(ss[7:4]==4'd5 )&en[1] &ena;
+    assign en[3]=(mm[3:0]==4'd9 )&en[2]&ena;
+    
+    assign en[4]=(mm[7:4]==4'd5 )&en[3]&ena;
+    
+  //  assign en[5]=(hh[3:0]==4'd2 )&en[4]&ena;
+
+    
+
+ 
+    
+    always@(posedge clk) begin
+        if(reset) pm<=1'b0;
+        else if (hh==8'h11 && ss==8'h59 && mm==8'h59 )   pm <= ~pm;
+       else   pm <= pm;
+    end
+    
+   
+    reg [7:0] temp;
+    
+    always@(*) begin
+        if( temp ==8'd10) 
+          begin
+              hh[3:0] <= 4'h0;
+              hh[7:4] <= 4'h1;
+          end
+        else if( temp ==8'd11) 
+          begin
+              hh[3:0] <= 4'h1;
+              hh[7:4] <= 4'h1;
+          end
+        else if( temp ==8'd12) 
+          begin
+              hh[3:0] <= 4'h2;
+              hh[7:4] <= 4'h1;
+          end
+        else  
+          begin
+              hh[3:0] <= temp[3:0];
+              hh[7:4] <= temp[7:4];
+          end
+    end
+        
+          
+     secs_lsb secs_lsb(clk,reset,en[0], ss[3:0]);
+     secs_msb secs_msb(clk,reset,en[1],ss[7:4]);
+    
+     secs_lsb mins_lsb(clk,reset,en[2], mm[3:0]);
+     secs_msb mins_msb(clk,reset,en[3],mm[7:4]);
+    
+    hours_lsb lsb(clk,reset,en[4], temp[7:0]);
+  //   hours_msb msb(clk,reset,en[5],hh[7:4]);
+ //   assign hh[3:0]= w1,
+    //       hh[7:4]=w2;
+    
+  
+    
+endmodule
+
+module secs_lsb(input clk,reset,ena,
+                 output reg [3:0] q );
+always@(posedge clk) begin
+    if(reset) q<=4'd0;
+    else q<=ena?(q<4'd9)?q+1'b1:4'd0:q;
+end
+endmodule
+                  
+module secs_msb(input clk,reset,ena,
+                output reg [3:0] q
+                );
+always@(posedge clk) begin
+    if(reset) q<=4'd0;
+    else q<=ena?(q<4'd5)?q+1'b1:4'd0:q;
+end
+endmodule
+    
+ module hours_lsb(input clk,reset,ena,
+                  output reg [7:0] q
+                );
+always@(posedge clk) begin
+    if(reset) q<=8'h12;
+    else q<=ena?(q<8'd12)?q+1'b1:8'd1:q;
+end
+    
+    
+endmodule 
+
+
+
+
+
+
+
+
